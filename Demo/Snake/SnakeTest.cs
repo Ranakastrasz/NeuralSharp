@@ -28,17 +28,17 @@ internal sealed class
     public override int Execute([NotNull] CommandContext context, [NotNull] Settings settings)
     {
         Console.WriteLine("#####################################");
-        Console.WriteLine($"Running test 3 with {settings.Values} values for {settings.Iterations} iterations.");
+        Console.WriteLine($"Running SnakeTest with {settings.Offspring} population tested {settings.Runs} times for {settings.Generations} generations.");
         Console.WriteLine("#####################################");
 
-        Run().GetAwaiter().GetResult();
+        Run(settings).GetAwaiter().GetResult();
 
         return 0;
     }
 
-    public async Task Run()
+    public async Task Run(Settings settings)
     {
-        var layers = new int[] { 24, 24, 24, 4 };
+        var layers = new int[] { 24, 4 };
         var fileName = $"network_{string.Join("_", layers)}.json";
         var fileNetwork = new FileNetworkIo(fileName);
         var networkConfig = await fileNetwork.Load();
@@ -52,7 +52,7 @@ internal sealed class
             network = new NeuralNetwork(w, b, layers);
         }
        
-        var evolutionConfig = new NetworkTrainerConfig(10000, 500, 50);
+        var evolutionConfig = new NetworkTrainerConfig(settings.Generations, settings.Offspring, settings.Runs);
         await _evolution.Run(network, evolutionConfig, Run, fileNetwork);
     }
 
@@ -71,19 +71,24 @@ internal sealed class
         {
             await game.Loop(i++);
         }
+        Console.WriteLine($"[thread {Environment.CurrentManagedThreadId}] step {i} fitness-so-far={game.SnakeGame.Fitness:F1}");
 
         return game.SnakeGame.Fitness;
     }
 
     public sealed class Settings : CommandSettings
     {
-        [Description("Values.")]
-        [CommandArgument(0, "[values]")]
-        public int Values { get; init; }
+        [Description("Generations.")]
+        [CommandArgument(0, "<generations>")]
+        public int Generations { get; init; }
 
-        [Description("Iteration.")]
-        [CommandArgument(0, "[iterations]")]
-        public int Iterations { get; init; }
+        [Description("Offspring.")]
+        [CommandArgument(1, "<offspring>")]
+        public int Offspring { get; init; }
+
+        [Description("Runs.")]
+        [CommandArgument(2, "<runs>")]
+        public int Runs { get; init; }
     }
 }
 

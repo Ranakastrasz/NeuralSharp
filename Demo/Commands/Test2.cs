@@ -57,11 +57,11 @@ internal sealed class
     public sealed class Settings : CommandSettings
     {
         [Description("Values.")]
-        [CommandArgument(0, "[values]")]
+        [CommandArgument(0, "<values>")]
         public int Values { get; init; }
 
         [Description("Iteration.")]
-        [CommandArgument(0, "[iterations]")]
+        [CommandArgument(1, "<iterations>")]
         public int Iterations { get; init; }
     }
 }

@@ -38,6 +38,9 @@ app.Configure(config =>
     config.AddCommand<Test2Command>("test2")
         .WithDescription("Run Test 2");
 
+    config.AddCommand<TestGatesCommand>("testGates")
+        .WithDescription("Run TestGates");
+
     config.AddCommand<Test3Command>("snake")
     .WithDescription("Run Test Snake");
 
@@ -47,4 +50,27 @@ app.Configure(config =>
 #endif
 });
 
-return app.Run(new[] { "snake" });
+// If args were supplied, run once and exit (normal CLI behaviour).
+if(args.Length > 0)
+    return app.Run(args);
+
+// Otherwise enter a simple REPL.
+while(true)
+{
+    Console.Write("> ");
+    var line = Console.ReadLine();
+    if(string.IsNullOrWhiteSpace(line)) continue;
+    if(line is "exit" or "quit") break;
+
+    // Split on spaces. For quoted args use a real tokenizer.
+    var tokens = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+    try
+    {
+        app.Run(tokens);
+    }
+    catch(Exception ex)
+    {
+        Console.WriteLine(ex.Message); // PropagateExceptions is on in DEBUG
+    }
+}
+return 0;
