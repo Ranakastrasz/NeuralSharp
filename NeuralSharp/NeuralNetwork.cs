@@ -8,7 +8,7 @@ public sealed class NeuralNetwork
 {
     #region Properties
 
-    private readonly float _learningRate = 0.1f;
+    private readonly float _learningRate = 0.3f;
     public readonly Layer[] Layers;
 
     #endregion
@@ -126,8 +126,9 @@ public sealed class NeuralNetwork
         {
             var outputNeuron = outputLayer.Neurons[i];
             var actualOutput = output[i];
-            var error = outputLayerError[i] =
-                (actualOutput - expected[i]) * activationFunction.Derivative(actualOutput);
+            var error = outputLayerError[i] = actualOutput - expected[i];
+            //var error = outputLayerError[i] =
+            //    (actualOutput - expected[i]) * activationFunction.Derivative(actualOutput);
 
             //Update the bias for the output neuron
             outputNeuron.Adjust(error, _learningRate);

@@ -61,7 +61,6 @@ internal sealed class
                 new[] { 2, settings.Size, settings.Size, 1 }),
         };
 
-        int pass = 0;
         int totalTests = 0;
         int[] softPassAt = new int[gateTests.Length];
         int[] hardPassAt = new int[gateTests.Length];
@@ -125,10 +124,7 @@ internal sealed class
             {
                 float[] actual = network.FeedForward(_activationFunction, inputs);
 
-                if (Helpers.Output(gateTest.Name, inputs, expected, actual))
-                {
-                    pass++;
-                }
+                Output(gateTest.Name, inputs, expected, actual);
             }
         }
         for(int i = 0; i < gateTests.Length; i++)
@@ -141,9 +137,9 @@ internal sealed class
                 {
                     Console.WriteLine($"{gateTest.Name}: completed at {hardPassAt[i]}");
                 }
-                else
+                if(softPassAt[i] > 0)
                 {
-                    Console.WriteLine($"{gateTest.Name}: soft completed at {softPassAt[i]}");
+                    Console.WriteLine($"{gateTest.Name}: Soft Completed at {softPassAt[i]}");
                 }
             }
             else
@@ -151,8 +147,6 @@ internal sealed class
                 Console.WriteLine($"{gateTest.Name}: did not soft complete");
             }
         }
-
-        Console.WriteLine($"Pass: {pass} / {totalTests}");
         return 0;
     }
 
@@ -230,22 +224,19 @@ internal sealed class
         int[] LayerSizes);
 
 
-    public static bool Output(string name, float[] input, float[] expected, float[] actual)
+    public static void Output(string name, float[] input, float[] expected, float[] actual)
     {
         var formattedInput = string.Join(", ", input.Select(f => f.ToString("0.0000")));
         var expectedOutput = string.Join(", ", expected.Select(f => f.ToString("0.0000")));
         var actualOutput = string.Join(", ", actual.Select(f => f.ToString("0.0000")));
-        bool equal = expected.SequenceEqual(actual, new FloatOutputComparer(0.1f));
-
+        float error = expected.Zip(actual, (e, a) => Math.Abs(e - a)).Sum();
         var outputBuilder = new StringBuilder();
         outputBuilder.Append("Input: \t").Append(name).Append("(").Append(formattedInput).AppendLine(") ");
         outputBuilder.Append("Expected: \t'").Append(expectedOutput).AppendLine("' ");
         outputBuilder.Append("Actual: \t'").Append(actualOutput).AppendLine("' ");
-        outputBuilder.AppendLine($"Pass: \t'{equal}' ");
+        outputBuilder.AppendLine($"Error: \t'{error}' ");
         outputBuilder.AppendLine("----------------------------------------");
         Console.WriteLine(outputBuilder.ToString());
-
-        return equal;
     }
 
 

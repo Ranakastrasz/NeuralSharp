@@ -15,7 +15,7 @@ var services = new ServiceCollection();
 // Services
 services.AddTransient<IWeightGenerator, WeightGenerator>();
 services.AddTransient<IBiasGenerator, BiasGenerator>();
-services.AddTransient<IActivationFunction, Tanh>();
+services.AddTransient<IActivationFunction, Sigmoid>();
 services.AddTransient<INeuralNetworkIo>(_ => new FileNetworkIo("./network.json"));
 services.AddTransient<INetworkMutator, NetworkMutator>();
 services.AddTransient<IFloatMutator, FloatMutator>();
