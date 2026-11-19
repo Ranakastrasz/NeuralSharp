@@ -20,14 +20,14 @@ using static Demo.Helpers;
 namespace Demo.Commands;
 
 internal sealed class
-    TestGatesCommand : Command<TestGatesCommand.Settings> //Got rid of the code in this because it's no longer correct with how the products are structured, need to rewrite this at some point.
+    TestGatesGenetic : Command<TestGatesGenetic.Settings> //Got rid of the code in this because it's no longer correct with how the products are structured, need to rewrite this at some point.
 {
     private readonly IActivationFunction _activationFunction;
     private readonly IBiasGenerator _biasGenerator;
     private readonly IWeightGenerator _weightGenerator;
 
 
-    public TestGatesCommand(IWeightGenerator weightGenerator, IBiasGenerator biasGenerator,
+    public TestGatesGenetic(IWeightGenerator weightGenerator, IBiasGenerator biasGenerator,
         IActivationFunction activationFunction)
     {
         _weightGenerator = weightGenerator;
@@ -44,21 +44,21 @@ internal sealed class
         GateTest[] gateTests = new[]
         {
             new GateTest("BUFFER", 1, inputs => CalculateBUFFER(inputs[0]),
-                new[] { 1, settings.Size, settings.Size, 1 }),
+                BuildLayers(1, 1,settings.Size,settings.Size)),
             new GateTest("NOT", 1, inputs => CalculateNOT(inputs[0]),
-                new[] { 1, settings.Size, settings.Size, 1 }),
+                BuildLayers(1, 1,settings.Size,settings.Size)),
             new GateTest("AND", 2, inputs => CalculateAND(inputs[0], inputs[1]),
-                new[] { 2, settings.Size, settings.Size, 1 }),
+                BuildLayers(2, 2,settings.Size,settings.Size)),
             new GateTest("OR", 2, inputs => CalculateOR(inputs[0], inputs[1]),
-                new[] { 2, settings.Size, settings.Size, 1 }),
+                BuildLayers(2, 2,settings.Size,settings.Size)),
             new GateTest("NAND", 2, inputs => CalculateNAND(inputs[0], inputs[1]),
-                new[] { 2, settings.Size, settings.Size, 1 }),
+                BuildLayers(2, 2,settings.Size,settings.Size)),
             new GateTest("NOR", 2, inputs => CalculateNOR(inputs[0], inputs[1]),
-                new[] { 2, settings.Size, settings.Size, 1 }),
+                BuildLayers(2, 2,settings.Size,settings.Size)),
             new GateTest("XOR", 2, inputs => CalculateXOR(inputs[0], inputs[1]),
-                new[] { 2, settings.Size, settings.Size, 1 }),
+                BuildLayers(2, 2,settings.Size,settings.Size)),
             new GateTest("XNOR", 2, inputs => CalculateXNOR(inputs[0], inputs[1]),
-                new[] { 2, settings.Size, settings.Size, 1 }),
+                BuildLayers(2, 2,settings.Size,settings.Size)),
         };
 
         int totalTests = 0;
@@ -66,7 +66,7 @@ internal sealed class
         int[] hardPassAt = new int[gateTests.Length];
         float[] error = new float[gateTests.Length];
 
-        for (int gateIndex = 0; gateIndex < gateTests.Length; gateIndex++)
+        for(int gateIndex = 0; gateIndex < gateTests.Length; gateIndex++)
         {
             GateTest gateTest = gateTests[gateIndex];
             List<(float[] Inputs, float[] Expected)> values =
@@ -79,23 +79,23 @@ internal sealed class
 
             totalTests += values.Count;
 
-            for (int iteration = 1; iteration <= settings.Iterations; iteration++)
+            for(int iteration = 1; iteration <= settings.Iterations; iteration++)
             {
-                foreach ((float[] inputs, float[] expected) in values)
+                foreach((float[] inputs, float[] expected) in values)
                 {
                     network.BackPropagate(_activationFunction, inputs, expected);
                 }
 
-                if (softPassAt[gateIndex] == 0 || hardPassAt[gateIndex] == 0)
+                if(softPassAt[gateIndex] == 0 || hardPassAt[gateIndex] == 0)
                 {
                     error[gateIndex] = 0;
 
-                    foreach ((float[] inputs, float[] expected) in values)
+                    foreach((float[] inputs, float[] expected) in values)
                     {
                         float[] actual =
                             network.FeedForward(_activationFunction, inputs);
 
-                        for (int outputIndex = 0;
+                        for(int outputIndex = 0;
                              outputIndex < actual.Length;
                              outputIndex++)
                         {
@@ -106,13 +106,13 @@ internal sealed class
 
                     error[gateIndex] /= values.Count;
 
-                    if (error[gateIndex] <= 0.1f &&
+                    if(error[gateIndex] <= 0.1f &&
                         softPassAt[gateIndex] == 0)
                     {
                         softPassAt[gateIndex] = iteration;
                     }
 
-                    if (error[gateIndex] <= 0.001f &&
+                    if(error[gateIndex] <= 0.001f &&
                         hardPassAt[gateIndex] == 0)
                     {
                         hardPassAt[gateIndex] = iteration;
@@ -120,7 +120,7 @@ internal sealed class
                 }
             }
 
-            foreach ((float[] inputs, float[] expected) in values)
+            foreach((float[] inputs, float[] expected) in values)
             {
                 float[] actual = network.FeedForward(_activationFunction, inputs);
 
@@ -155,11 +155,11 @@ internal sealed class
         List<(float[] Inputs, float[] Expected)> values = new List<(float[] Inputs, float[] Expected)>();
         int combinations = 1 << gateTest.InputCount;
 
-        for (int combination = 0; combination < combinations; combination++)
+        for(int combination = 0; combination < combinations; combination++)
         {
             float[] inputs = new float[gateTest.InputCount];
 
-            for (int inputIndex = 0; inputIndex < gateTest.InputCount; inputIndex++)
+            for(int inputIndex = 0; inputIndex < gateTest.InputCount; inputIndex++)
             {
                 int bitPosition = gateTest.InputCount - inputIndex - 1;
                 inputs[inputIndex] = (combination & (1 << bitPosition)) == 0 ? 0f : 1f;
@@ -170,7 +170,7 @@ internal sealed class
 
         return values;
     }
-#region Calculations
+    #region Calculations
     private static float CalculateBUFFER(float a)
     {
         return (float)Math.Round(a);
@@ -185,7 +185,7 @@ internal sealed class
     }
     private static float CalculateOR(float a, float b)
     {
-        return Math.Max((float) Math.Round(a), (float) Math.Round(b));
+        return Math.Max((float)Math.Round(a), (float)Math.Round(b));
     }
     private static float CalculateNAND(float a, float b)
     {
@@ -203,9 +203,9 @@ internal sealed class
     {
         return 1f - Math.Abs((float)Math.Round(a) - (float)Math.Round(b));
     }
-#endregion
+    #endregion
 
-    public sealed class Settings : CommandSettings
+    public sealed class Settings: CommandSettings
     {
 
         [Description("Size.")]
@@ -223,6 +223,10 @@ internal sealed class
         Func<float[], float> Calculate,
         int[] LayerSizes);
 
+    private static int[] BuildLayers(int inputCount, int outputCount, params int[] hiddenSizes)
+    {
+        return new[] { inputCount }.Concat(hiddenSizes).Append(outputCount).ToArray();
+    }
 
     public static void Output(string name, float[] input, float[] expected, float[] actual)
     {

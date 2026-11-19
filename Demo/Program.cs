@@ -38,7 +38,7 @@ app.Configure(config =>
     config.AddCommand<Test2Command>("test2")
         .WithDescription("Run Test 2");
 
-    config.AddCommand<TestGatesCommand>("testGates")
+    config.AddCommand<TestGatesGradient>("testGates")
         .WithDescription("Run TestGates");
 
     config.AddCommand<Test3Command>("snake")
