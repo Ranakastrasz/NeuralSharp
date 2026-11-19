@@ -1,4 +1,6 @@
-﻿using Demo.Commands;
+﻿using System.Net.Http.Headers;
+
+using Demo.Commands;
 using Demo.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -41,6 +43,9 @@ app.Configure(config =>
     config.AddCommand<TestGatesGradient>("testGates")
         .WithDescription("Run TestGates");
 
+    config.AddCommand<TestGatesGenetic>("testGatesGenetic")
+        .WithDescription("Run TestGatesGenetic");
+
     config.AddCommand<Test3Command>("snake")
     .WithDescription("Run Test Snake");
 
@@ -49,6 +54,8 @@ app.Configure(config =>
     config.ValidateExamples();
 #endif
 });
+
+app.Run(new[] { "testGates", "12", "100" });
 
 // If args were supplied, run once and exit (normal CLI behaviour).
 if(args.Length > 0)

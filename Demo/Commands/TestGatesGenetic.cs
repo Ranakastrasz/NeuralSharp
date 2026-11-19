@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Text;
 using System.Xml.Linq;
 
+using Demo.Gates;
+
 using Microsoft.Extensions.Logging;
 
 using NeuralSharp;
@@ -20,7 +22,7 @@ using static Demo.Helpers;
 namespace Demo.Commands;
 
 internal sealed class
-    TestGatesGenetic : Command<TestGatesGenetic.Settings> //Got rid of the code in this because it's no longer correct with how the products are structured, need to rewrite this at some point.
+    TestGatesGenetic: Command<TestGatesGenetic.Settings> //Got rid of the code in this because it's no longer correct with how the products are structured, need to rewrite this at some point.
 {
     private readonly IActivationFunction _activationFunction;
     private readonly IBiasGenerator _biasGenerator;
@@ -41,25 +43,7 @@ internal sealed class
         Console.WriteLine($"Running test Gates with for {settings.Iterations} iterations.");
         Console.WriteLine("#####################################");
 
-        GateTest[] gateTests = new[]
-        {
-            new GateTest("BUFFER", 1, inputs => CalculateBUFFER(inputs[0]),
-                BuildLayers(1, 1,settings.Size,settings.Size)),
-            new GateTest("NOT", 1, inputs => CalculateNOT(inputs[0]),
-                BuildLayers(1, 1,settings.Size,settings.Size)),
-            new GateTest("AND", 2, inputs => CalculateAND(inputs[0], inputs[1]),
-                BuildLayers(2, 2,settings.Size,settings.Size)),
-            new GateTest("OR", 2, inputs => CalculateOR(inputs[0], inputs[1]),
-                BuildLayers(2, 2,settings.Size,settings.Size)),
-            new GateTest("NAND", 2, inputs => CalculateNAND(inputs[0], inputs[1]),
-                BuildLayers(2, 2,settings.Size,settings.Size)),
-            new GateTest("NOR", 2, inputs => CalculateNOR(inputs[0], inputs[1]),
-                BuildLayers(2, 2,settings.Size,settings.Size)),
-            new GateTest("XOR", 2, inputs => CalculateXOR(inputs[0], inputs[1]),
-                BuildLayers(2, 2,settings.Size,settings.Size)),
-            new GateTest("XNOR", 2, inputs => CalculateXNOR(inputs[0], inputs[1]),
-                BuildLayers(2, 2,settings.Size,settings.Size)),
-        };
+        Gates.Gates.GateTest[] gateTests = Gates.Gates.GetTests(settings.Size);
 
         int totalTests = 0;
         int[] softPassAt = new int[gateTests.Length];
@@ -68,7 +52,7 @@ internal sealed class
 
         for(int gateIndex = 0; gateIndex < gateTests.Length; gateIndex++)
         {
-            GateTest gateTest = gateTests[gateIndex];
+            Gates.Gates.GateTest gateTest = gateTests[gateIndex];
             List<(float[] Inputs, float[] Expected)> values =
                 CreateTruthTable(gateTest);
 
@@ -129,7 +113,7 @@ internal sealed class
         }
         for(int i = 0; i < gateTests.Length; i++)
         {
-            GateTest gateTest = gateTests[i];
+            Gates.Gates.GateTest gateTest = gateTests[i];
             Console.WriteLine($"{gateTest.Name}: errorRate on completion of {error[i]}");
             if(softPassAt[i] > 0)
             {
@@ -150,7 +134,7 @@ internal sealed class
         return 0;
     }
 
-    private static List<(float[] Inputs, float[] Expected)> CreateTruthTable(GateTest gateTest)
+    private static List<(float[] Inputs, float[] Expected)> CreateTruthTable(Gates.Gates.GateTest gateTest)
     {
         List<(float[] Inputs, float[] Expected)> values = new List<(float[] Inputs, float[] Expected)>();
         int combinations = 1 << gateTest.InputCount;
@@ -170,40 +154,6 @@ internal sealed class
 
         return values;
     }
-    #region Calculations
-    private static float CalculateBUFFER(float a)
-    {
-        return (float)Math.Round(a);
-    }
-    private static float CalculateNOT(float a)
-    {
-        return 1f - (float)Math.Round(a);
-    }
-    private static float CalculateAND(float a, float b)
-    {
-        return (float)Math.Round(a) * (float)Math.Round(b);
-    }
-    private static float CalculateOR(float a, float b)
-    {
-        return Math.Max((float)Math.Round(a), (float)Math.Round(b));
-    }
-    private static float CalculateNAND(float a, float b)
-    {
-        return 1f - ((float)Math.Round(a) * (float)Math.Round(b));
-    }
-    private static float CalculateNOR(float a, float b)
-    {
-        return 1f - Math.Max((float)Math.Round(a), (float)Math.Round(b));
-    }
-    private static float CalculateXOR(float a, float b)
-    {
-        return Math.Abs((float)Math.Round(a) - (float)Math.Round(b));
-    }
-    private static float CalculateXNOR(float a, float b)
-    {
-        return 1f - Math.Abs((float)Math.Round(a) - (float)Math.Round(b));
-    }
-    #endregion
 
     public sealed class Settings: CommandSettings
     {
@@ -215,17 +165,6 @@ internal sealed class
         [Description("Iteration.")]
         [CommandArgument(2, "<iterations>")]
         public int Iterations { get; init; }
-    }
-
-    private sealed record GateTest(
-        string Name,
-        int InputCount,
-        Func<float[], float> Calculate,
-        int[] LayerSizes);
-
-    private static int[] BuildLayers(int inputCount, int outputCount, params int[] hiddenSizes)
-    {
-        return new[] { inputCount }.Concat(hiddenSizes).Append(outputCount).ToArray();
     }
 
     public static void Output(string name, float[] input, float[] expected, float[] actual)
